@@ -8,8 +8,9 @@ const LogoParticles = () => {
     // Scene setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0); // Set background to transparent
     mountRef.current.appendChild(renderer.domElement);
 
     // Camera position
@@ -17,7 +18,7 @@ const LogoParticles = () => {
 
     // Load texture
     const loader = new THREE.TextureLoader();
-    loader.load('/logo.png', (texture) => {
+    loader.load('/new-logo.png', (texture) => {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       canvas.width = texture.image.width;
@@ -30,20 +31,16 @@ const LogoParticles = () => {
       const positions = [];
       const colors = [];
 
-      for (let y = 0; y < canvas.height; y += 5) {
-        for (let x = 0; x < canvas.width; x += 5) {
+      for (let y = 0; y < canvas.height; y += 2) {
+        for (let x = 0; x < canvas.width; x += 2) {
           const index = (y * canvas.width + x) * 4;
           const alpha = imageData.data[index + 3];
           if (alpha > 0) {
-            const posX = (canvas.width / 2 - x) / 50;
+            const posX = (x - canvas.width / 2) / 50;
             const posY = (canvas.height / 2 - y) / 50;
-            const posZ = 0;
+            const posZ = (Math.random() - 0.5) * 0.5;
             positions.push(posX, posY, posZ);
-            colors.push(
-              imageData.data[index] / 255,
-              imageData.data[index + 1] / 255,
-              imageData.data[index + 2] / 255
-            );
+            colors.push(1, 1, 1); // White particles
           }
         }
       }
@@ -51,7 +48,12 @@ const LogoParticles = () => {
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
       geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-      const material = new THREE.PointsMaterial({ size: 0.05, vertexColors: true });
+      const material = new THREE.PointsMaterial({
+        size: 0.02,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+      });
       const particles = new THREE.Points(geometry, material);
       scene.add(particles);
 
@@ -59,18 +61,28 @@ const LogoParticles = () => {
       const animate = () => {
         requestAnimationFrame(animate);
         particles.rotation.y += 0.001;
+        particles.rotation.x += 0.0005;
         renderer.render(scene, camera);
       };
       animate();
-    });
 
-    // Cleanup
-    return () => {
-      mountRef.current.removeChild(renderer.domElement);
-    };
+      // Resize handler
+      const handleResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
+      window.addEventListener('resize', handleResize);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        mountRef.current.removeChild(renderer.domElement);
+      };
+    });
   }, []);
 
-  return <div ref={mountRef} />;
+  return <div ref={mountRef} style={{ width: '100%', height: '100vh' }} />;
 };
 
 export default LogoParticles;
