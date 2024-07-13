@@ -35,10 +35,10 @@ const LogoParticles = () => {
           const index = (y * canvas.width + x) * 4;
           const alpha = imageData.data[index + 3];
           if (alpha > 0) {
-            const x = (canvas.width / 2 - x) / 50;
-            const y = (canvas.height / 2 - y) / 50;
-            const z = 0;
-            positions.push(x, y, z);
+            const posX = (canvas.width / 2 - x) / 50;
+            const posY = (canvas.height / 2 - y) / 50;
+            const posZ = 0;
+            positions.push(posX, posY, posZ);
             colors.push(
               imageData.data[index] / 255,
               imageData.data[index + 1] / 255,
